@@ -68,6 +68,31 @@ const _nav = [
   
   {
     component: CNavTitle,
+    name: 'Page Management',
+  },
+  {
+    component: CNavGroup,
+    name: 'Pages',
+    to: '/all-pages',
+    icon: <CIcon icon={cilDescription} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'All Pages',
+        to: '/all-pages',
+      },
+      {
+        component: CNavItem,
+        name: 'Create Page',
+        to: '/create-page',
+      },
+       
+    ],
+  },
+  
+  
+  {
+    component: CNavTitle,
     name: 'User Management',
     showForRoles: ['superAdmin'],
   },

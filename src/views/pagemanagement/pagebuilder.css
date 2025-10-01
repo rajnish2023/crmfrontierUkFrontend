@@ -1,0 +1,24 @@
+.pb-section {
+  transition: all 0.2s ease-in-out;
+}
+
+.pb-section:hover {
+  background: #f8f9fa;
+  border-color: #0d6efd;
+}
+
+.pb-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 120px;
+}
+
+.pb-widget {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pb-widget:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

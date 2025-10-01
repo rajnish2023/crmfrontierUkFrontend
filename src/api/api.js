@@ -1,6 +1,8 @@
 import axios from 'axios';
 const API = axios.create({ baseURL: 'https://crmfoceplus-backend.onrender.com/api' });
 
+// const API = axios.create({ baseURL: 'http://localhost:7878/api' });
+
 //Get all galleries
 export const fetchGalleries = () => API.get('/getgalleries');
 //Create a gallery
@@ -107,6 +109,34 @@ export const changePassword = async (token,userData) => {
     throw error;   
   }
 };
+
+
+//page management api
+export const fetchPages = (token) => { 
+    return API.get('/page/getpages', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
+
+export const createPage = (token, newPage) => {
+    return API.post('/page/createpage', newPage, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
+export const updatePage = (token, id, updatedPage) => {
+    return API.patch(`/page/updatepage/${id}`, updatedPage, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  };
+export const deletePage = (id) => API.delete(`/page/deletepage/${id}`);
+export const fetchPageById = (id) => API.get(`/page/getpagebyId/${id}`);
+
 
 
 

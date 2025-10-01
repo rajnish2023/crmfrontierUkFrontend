@@ -72,7 +72,6 @@ const BlogPostList = () => {
             <CTableRow>
               <CTableHeaderCell scope="col">#</CTableHeaderCell>
               <CTableHeaderCell scope="col">Title</CTableHeaderCell>
-              <CTableHeaderCell scope="col">Slug</CTableHeaderCell>
               <CTableHeaderCell scope="col">Category</CTableHeaderCell>
               <CTableHeaderCell scope="col">Status</CTableHeaderCell>
               <CTableHeaderCell scope="col">Actions</CTableHeaderCell>
@@ -83,7 +82,6 @@ const BlogPostList = () => {
               <CTableRow key={post._id}>
                 <CTableDataCell>{index + 1}</CTableDataCell>
                 <CTableDataCell>{post.title}</CTableDataCell>
-                <CTableDataCell>{post.slug}</CTableDataCell>
                 <CTableDataCell>{post.category.title}</CTableDataCell>
                 <CTableDataCell>{post.status}</CTableDataCell>
                 <CTableDataCell>
@@ -91,7 +89,7 @@ const BlogPostList = () => {
                 <Link to={`/blog-post/update/${post._id}`} style={{ color: 'white' }}>Edit</Link>
                 </CButton>
                 <CButton className="mx-3" color="warning">
-                <Link to ={`https://www.crmforceplus.com/blog/preview/${post.slug}`} target='_blank'>Preview</Link>
+                <Link to ={`https://www.crmfrontier.com/blog/preview/${post.slug}`} target='_blank'>Preview</Link>
                 </CButton>
                   {/* <CButton color="danger" onClick={() => handleDeletePost(post._id)}>Delete</CButton> */}
                 </CTableDataCell>
