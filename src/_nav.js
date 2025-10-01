@@ -69,6 +69,7 @@ const _nav = [
   {
     component: CNavTitle,
     name: 'Page Management',
+    showForRoles: ['superAdmin'],
   },
   {
     component: CNavGroup,
