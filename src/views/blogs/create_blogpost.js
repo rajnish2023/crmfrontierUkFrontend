@@ -31,6 +31,7 @@ const CreateBlogPost = () => {
     metaDescription: '',
     metakeywords: '',
     status: 'Draft',
+    schema:[' ']
   });
 
   const [categories, setCategories] = useState([]);
@@ -99,6 +100,22 @@ const CreateBlogPost = () => {
     setNewPost((prevPost) => ({ ...prevPost, content }));
   };
 
+  const handleSchemaChange = (index, value) => {
+    const updated = [...newPost.schema];
+    updated[index] = value;
+    setNewPost((prev) => ({ ...prev, schema: updated }));
+  };
+
+  const addSchema = () => {
+    setNewPost((prev) => ({ ...prev, schema: [...prev.schema, ''] }));
+  };
+
+  const removeSchema = (index) => {
+    setNewPost((prev) => {
+      const updatedSchema = prev.schema.filter((_, idx) => idx !== index);
+      return { ...prev, schema: updatedSchema };
+    });
+  };
   const validateForm = () => {
     const validationErrors = {};
     let isValid = true;
@@ -153,6 +170,7 @@ const CreateBlogPost = () => {
     formData.append('metaDescription', newPost.metaDescription);
     formData.append('metakeywords', newPost.metakeywords);
     formData.append('status', newPost.status);
+    formData.append('schema', JSON.stringify(newPost.schema)); 
 
     // Append files (banner and metaimage)
     if (newPost.banner) {
@@ -382,6 +400,37 @@ const CreateBlogPost = () => {
                 <option value="Draft">Draft</option>
                 <option value="Published">Published</option>
               </CFormSelect>
+              {/* Schema Fields */}
+               <CFormLabel className="form-label mt-3">Structured Data (Schema)</CFormLabel>
+               {newPost.schema.map((schemaText, idx) => (
+                  <div key={idx} className="mb-3">
+                    <CFormTextarea
+                      rows={3}
+                      value={schemaText}
+                      onChange={(e) => handleSchemaChange(idx, e.target.value)}
+                      placeholder="Enter JSON-LD or structured data"
+                    />
+                    {newPost.schema.length > 1 && (
+                      <CButton
+                        color="danger"
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => removeSchema(idx)}
+                      >
+                        Remove
+                      </CButton>
+                    )}
+                  </div>
+                ))}
+                <CButton
+                  color="success"
+                  size="sm"
+                  variant="outline"
+                  onClick={addSchema}
+                >
+                  Add Schema
+                </CButton>
 
               {/* Submit Button */}
               <div className="text-center mt-4">

@@ -37,6 +37,7 @@ const EditBlogPost = () => {
     metaDescription: '',
     metakeywords: '',
     status: 'Draft',
+    schema:[' ']
   });
 
   const [categories, setCategories] = useState([]);
@@ -52,6 +53,9 @@ const EditBlogPost = () => {
   const loadBlogPost = async () => {
     try {
       const response = await fetchBlogPostById(id);
+       if (!Array.isArray(response.data.schema)) {
+      response.data.schema = [''];  
+    }
       setPost(response.data);
       if (response.data.banner) {
         setBannerPreview(response.data.banner); 
@@ -114,6 +118,20 @@ const EditBlogPost = () => {
     setPost((prevPost) => ({ ...prevPost, content }));
   };
 
+   const handleSchemaChange = (index, value) => {
+    const updatedSchema = [...post.schema];
+    updatedSchema[index] = value;
+    setPost((prevPost) => ({ ...prevPost, schema: updatedSchema }));
+  };
+  const addSchema = () => {
+    setPost((prevPost) => ({ ...prevPost, schema: [...prevPost.schema, ''] }));
+  }
+  const removeSchema = (index) => {
+    const updatedSchema = post.schema.filter((_, idx) => idx !== index);
+    setPost((prevPost) => ({ ...prevPost, schema: updatedSchema }));
+  }
+
+
   const validateForm = () => {
     const validationErrors = {};
     let isValid = true;
@@ -171,6 +189,7 @@ const EditBlogPost = () => {
     formData.append('metaDescription', post.metaDescription);
     formData.append('metakeywords', post.metakeywords);
     formData.append('status', post.status);
+    formData.append('schema', JSON.stringify(post.schema));
 
     // Append files (banner and metaimage)
     if (post.banner) {
@@ -396,6 +415,39 @@ const EditBlogPost = () => {
                 <option value="Draft">Draft</option>
                 <option value="Published">Published</option>
               </CFormSelect>
+
+              {/* Structured Data (Schema) */}
+              <CFormLabel className="form-label mt-3 mb-3">Structured Data (Schema)</CFormLabel>
+                {post.schema.map((schemaText, idx) => (
+                 <div key={idx} className="mb-3">
+                  <CFormTextarea
+                      rows={3}
+                      value={schemaText}
+                      onChange={(e) => handleSchemaChange(idx, e.target.value)}
+                      placeholder="Enter JSON-LD or structured data"
+                    />
+                  {post.schema.length > 1 && (
+                      <CButton
+                        color="danger"
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => removeSchema(idx)}
+                      >
+                        Remove
+                      </CButton>
+                    )}
+                    </div>
+                    ))}
+                <CButton
+                    color="success"
+                    size="sm"
+                    variant="outline"
+                    onClick={addSchema}
+                    className="mb-3"
+                    >
+                    Add Schema
+                </CButton>
 
               {/* Save Button */}
               <CButton type="submit" className="btn btn-primary w-100">Save Changes</CButton>
