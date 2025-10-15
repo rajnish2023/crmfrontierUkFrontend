@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CCol, CRow, CButton, CTable, CTableBody, CTableDataCell, CTableHead, CTableHeaderCell, CTableRow,CInputGroup,CFormInput,CSpinner   } from '@coreui/react';
-import { BlogPosts, deleteBlogPost } from '../../api/api';  
+import { BlogPosts, deleteBlogPost } from '../../api/api'; 
+import './blogstyle.css';
 
 const BlogPostList = () => {
   const [blogPosts, setBlogPosts] = useState([]);
@@ -10,9 +11,10 @@ const BlogPostList = () => {
   const token = localStorage.getItem('token');  
 
   const loadBlogPosts = async () => {
+     setLoading(true);
     try {
       const response = await BlogPosts(token);
-      setLoading(true);
+     
       if (Array.isArray(response.data)) {
         setBlogPosts(response.data);
         setLoading(false);
