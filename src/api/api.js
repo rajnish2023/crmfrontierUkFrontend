@@ -1,7 +1,23 @@
 import axios from 'axios';
-const API = axios.create({ baseURL: 'https://crmfoceplus-backend.onrender.com/api' });
+// const API = axios.create({ baseURL: 'https://crmfoceplus-backend.onrender.com/api' });
 
-// const API = axios.create({ baseURL: 'http://localhost:7878/api' });
+const API = axios.create({ baseURL: 'http://localhost:7878/api' });
+
+// Global Response Interceptor for security and better error handling
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Session expired or unauthorized
+      localStorage.removeItem('token');
+      // Redirect to login if not already there
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 //Get all galleries
 export const fetchGalleries = () => API.get('/getgalleries');
@@ -134,9 +150,13 @@ export const updatePage = (token, id, updatedPage) => {
       },
     });
   };
-export const deletePage = (id) => API.delete(`/page/deletepage/${id}`);
-export const fetchPageById = (id) => API.get(`/page/getpagebyId/${id}`);
+export const deletePage = (token, id) => API.delete(`/page/deletepage/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+export const fetchPageById = (token, id) => API.get(`/page/getpagebyId/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 
-
+export const fetchPageBySlug = (slug) => API.get(`/page/getpagebyslug/${slug}`);
 
 

@@ -1,142 +1,234 @@
-import React, { useState , useEffect} from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CButton, CCard, CCardBody, CCardGroup, CCol, CContainer, CForm, CFormInput, CInputGroup, CInputGroupText, CRow } from '@coreui/react';
+import {
+  CAlert,
+  CButton,
+  CCard,
+  CCardBody,
+  CCol,
+  CContainer,
+  CForm,
+  CFormInput,
+  CInputGroup,
+  CInputGroupText,
+  CRow,
+  CSpinner,
+} from '@coreui/react';
 import CIcon from '@coreui/icons-react';
-import { cilLockLocked, cilUser } from '@coreui/icons';
-
-import {getUserProfile, userLogin } from '../../api/api';
+import { cilEnvelopeClosed, cilLockLocked } from '@coreui/icons';
+import { getUserProfile, userLogin } from '../../api/api';
+import './userstyle.css';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+  });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const validateToken = async () => {
-        try {
-          const response = await getUserProfile(token);
-          if (response.status === 200) {
-            navigate('/dashboard')
-           }
-           else{
-            navigate('/login')
-           }
-          
-        } catch (err) {
-         
-          localStorage.removeItem('token');
-        }
-        
-      };
+    let mounted = true;
 
-      validateToken();
-    }
+    const validateToken = async () => {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        if (mounted) {
+          setIsCheckingSession(false);
+        }
+        return;
+      }
+
+      try {
+        const response = await getUserProfile(token);
+        if (response.status === 200 && mounted) {
+          navigate('/dashboard', { replace: true });
+          return;
+        }
+      } catch (error) {
+        localStorage.removeItem('token');
+      } finally {
+        if (mounted) {
+          setIsCheckingSession(false);
+        }
+      }
+    };
+
+    validateToken();
+
+    return () => {
+      mounted = false;
+    };
   }, [navigate]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => ({ ...current, [name]: '' }));
+    setErrorMessage('');
+  };
+
+  const validateForm = () => {
+    const nextErrors = {};
+
+    if (!form.email.trim()) {
+      nextErrors.email = 'Email is required.';
+    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+      nextErrors.email = 'Enter a valid email address.';
+    }
+
+    if (!form.password.trim()) {
+      nextErrors.password = 'Password is required.';
+    } else if (form.password.length < 6) {
+      nextErrors.password = 'Password must be at least 6 characters.';
+    }
+
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setErrorMessage('');
 
-    if (!email || !password) {
-      setErrorMessage('Both fields are required!');
+    if (!validateForm()) {
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const response = await userLogin({ email, password });
-      console.log("response");
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token); 
-        navigate('/dashboard', { replace: true });   
-      } else {
-        setErrorMessage(response.error || 'An unknown error occurred.');
+      const response = await userLogin({
+        email: form.email.trim(),
+        password: form.password,
+      });
+
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+        navigate('/dashboard', { replace: true });
+        return;
       }
+
+      setErrorMessage('Login failed. Please try again.');
     } catch (error) {
-      setErrorMessage(error?.response?.data?.error || 'An error occurred. Please try again later.');
+      setErrorMessage(
+        error?.response?.data?.error || 'An error occurred. Please try again later.',
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (isCheckingSession) {
+    return (
+      <div className="login-page">
+        <div className="loading-overlay">
+          <div className="loading-content">
+            <CSpinner color="light" size="lg" />
+            <p>Checking your session...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
+    <div className="login-page">
+      <div className="login-background-glow login-background-glow-left" />
+      <div className="login-background-glow login-background-glow-right" />
       <CContainer>
-        <CRow className="justify-content-center">
-          <CCol md={8}>
-            <CCardGroup>
-              <CCard className="p-4">
-                <CCardBody>
+        <CRow className="justify-content-center align-items-center min-vh-100 py-4">
+          <CCol lg={10} xl={9}>
+            <div className="login-shell">
+              <div className="login-brand-panel">
+                <p className="login-kicker">CRM Frontier UK</p>
+                <h1>Welcome back</h1>
+                 
+              </div>
+
+              <CCard className="login-card">
+                <CCardBody className="p-4 p-lg-5">
                   <CForm onSubmit={handleSubmit}>
-                    <h3>Login</h3>
-                    <p className="text-body-secondary">Sign In to your account</p>
+                    <div className="login-form-header">
+                      <h2>Sign in</h2>
+                      <p>Use your account credentials to continue.</p>
+                    </div>
 
-                    {/* Username Input */}
-                    <CInputGroup className="mb-3">
-                      <CInputGroupText>
-                        <CIcon icon={cilUser} />
-                      </CInputGroupText>
-                      <CFormInput
-                        placeholder="Email"
-                        autoComplete="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        invalid={errorMessage ? true : false}
-                      />
-                    </CInputGroup>
+                    {errorMessage ? (
+                      <CAlert color="danger" className="mb-4">
+                        {errorMessage}
+                      </CAlert>
+                    ) : null}
 
-                    {/* Password Input */}
-                    <CInputGroup className="mb-4">
-                      <CInputGroupText>
-                        <CIcon icon={cilLockLocked} />
-                      </CInputGroupText>
-                      <CFormInput
-                        type="password"
-                        placeholder="Password"
-                        autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        invalid={errorMessage ? true : false}
-                      />
-                    </CInputGroup>
+                    <div className="mb-3">
+                      <label className="login-label" htmlFor="login-email">
+                        Email
+                      </label>
+                      <CInputGroup>
+                        <CInputGroupText>
+                          <CIcon icon={cilEnvelopeClosed} />
+                        </CInputGroupText>
+                        <CFormInput
+                          id="login-email"
+                          name="email"
+                          type="email"
+                          placeholder="name@company.com"
+                          autoComplete="email"
+                          value={form.email}
+                          onChange={handleInputChange}
+                          invalid={Boolean(fieldErrors.email)}
+                        />
+                      </CInputGroup>
+                      {fieldErrors.email ? (
+                        <small className="text-danger d-block mt-2">{fieldErrors.email}</small>
+                      ) : null}
+                    </div>
 
-                    {/* Error message */}
-                    {errorMessage && (
-                      <div className="text-danger mb-3">
-                        <small>{errorMessage}</small>
-                      </div>
-                    )}
+                    <div className="mb-3">
+                      <label className="login-label" htmlFor="login-password">
+                        Password
+                      </label>
+                      <CInputGroup>
+                        <CInputGroupText>
+                          <CIcon icon={cilLockLocked} />
+                        </CInputGroupText>
+                        <CFormInput
+                          id="login-password"
+                          name="password"
+                          type="password"
+                          placeholder="Enter your password"
+                          autoComplete="current-password"
+                          value={form.password}
+                          onChange={handleInputChange}
+                          invalid={Boolean(fieldErrors.password)}
+                        />
+                      </CInputGroup>
+                      {fieldErrors.password ? (
+                        <small className="text-danger d-block mt-2">{fieldErrors.password}</small>
+                      ) : null}
+                    </div>
 
-                    <CRow>
-                      <CCol xs={6}>
-                        <CButton color="primary" className="px-4" type="submit" disabled={isSubmitting}>
-                          {isSubmitting ? 'Logging In...' : 'Login'}
-                        </CButton>
-                      </CCol>
-                    </CRow>
+                    <div className="login-actions">
+                      <CButton
+                        color="dark"
+                        type="submit"
+                        className="login-submit-button"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? 'Signing in...' : 'Sign in'}
+                      </CButton>
+                      <Link to="/forgotpassword" className="login-forgot-link">
+                        Forgot password?
+                      </Link>
+                    </div>
                   </CForm>
                 </CCardBody>
               </CCard>
-              <CCard className="text-white bg-primary py-5" style={{ width: '44%' }}>
-                <CCardBody className="text-center">
-                  <div>
-                    <p>
-                      If you want to forget your password, please click Forgot Password Button.
-                    </p>
-                    <Link to="/forgotpassword">
-                      <CButton color="primary" className="mt-3" active tabIndex={-1}>
-                        Forgot Now!
-                      </CButton>
-                    </Link>
-                  </div>
-                </CCardBody>
-              </CCard>
-            </CCardGroup>
+            </div>
           </CCol>
         </CRow>
       </CContainer>
@@ -145,3 +237,4 @@ const Login = () => {
 };
 
 export default Login;
+

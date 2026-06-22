@@ -1,5 +1,22 @@
-// Variable overrides
-//
-// If you want to customize your project please add your variables below.
-
+// ─── Premium Color Palette Overrides ─────────────────────────────────────────
 $enable-deprecation-messages: false !default;
+
+// Primary brand color — deep indigo
+$primary:   #4f46e5 !default;
+$secondary: #64748b !default;
+$success:   #10b981 !default;
+$info:      #0ea5e9 !default;
+$warning:   #f59e0b !default;
+$danger:    #ef4444 !default;
+
+// Sidebar
+$sidebar-width:              260px !default;
+$sidebar-bg:                 #0f172a !default;
+$sidebar-color:              #94a3b8 !default;
+$sidebar-brand-bg:           #0f172a !default;
+$sidebar-nav-link-color:     #94a3b8 !default;
+$sidebar-nav-link-active-bg: rgba(79, 70, 229, 0.15) !default;
+$sidebar-nav-link-active-color: #fff !default;
+$sidebar-nav-link-hover-bg:  rgba(255, 255, 255, 0.05) !default;
+$sidebar-nav-link-hover-color: #e2e8f0 !default;
+$sidebar-nav-title-color:    #475569 !default;

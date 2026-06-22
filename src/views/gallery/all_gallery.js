@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { fetchGalleries, createGallery } from '../../api/api';  // Ensure deleteImage is in the API functions
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 import {
   CRow,
   CCol,
@@ -19,9 +20,13 @@ import {
   CModalFooter,
   CForm,
   CFormInput,
+  CFormCheck,
+  CSpinner,
+  CAvatar,
 } from '@coreui/react';
+import { fetchGalleries, createGallery } from '../../api/api';
 import CIcon from '@coreui/icons-react';
-import { cilOptions } from '@coreui/icons';
+import { cilOptions, cilCloudDownload, cilCheckCircle, cilCloudUpload } from '@coreui/icons';
 import './gallery.css';
 
 const Gallery = ({ className }) => {
@@ -32,14 +37,15 @@ const Gallery = ({ className }) => {
   const [galleries, setGalleries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [downloading, setDownloading] = useState(false);
   const APP_URL = 'https://crmfoceplus-backend.onrender.com';
 
-  // Fetch galleries on component mount
   useEffect(() => {
     const loadGalleries = async () => {
       try {
         const response = await fetchGalleries();
-        setGalleries(response.data);  // Set galleries in the state
+        setGalleries(response.data);
       } catch (error) {
         console.error('Error fetching galleries:', error);
         setError('Failed to load galleries');
@@ -47,148 +53,178 @@ const Gallery = ({ className }) => {
         setLoading(false);
       }
     };
-
     loadGalleries();
   }, []);
 
-  // Handle image link copy
   const handleCopyImageLink = (link) => {
     navigator.clipboard.writeText(link);
     alert('Image link copied to clipboard');
   };
 
-  // Handle file change (image selection)
   const handleFileChange = (e) => {
     const files = e.target.files;
     setSelectedFiles(files);
-    const previews = Array.from(files).map((file) =>
-      URL.createObjectURL(file)
-    );
+    const previews = Array.from(files).map((file) => URL.createObjectURL(file));
     setImagePreviews(previews);
   };
 
-  // Handle image upload
   const handleUpload = async () => {
     if (selectedFiles) {
       const formData = new FormData();
       Array.from(selectedFiles).forEach((file) => formData.append('files', file));
-
       try {
-        await createGallery(formData);  // Upload gallery API call
+        await createGallery(formData);
         alert('Gallery uploaded successfully');
         setModalVisible(false);
-        
-        // Re-fetch galleries after successful upload
         const response = await fetchGalleries();
         setGalleries(response.data);
+        setImagePreviews([]);
       } catch (error) {
         alert('Error uploading gallery');
-        console.error('Error uploading gallery:', error);
       }
     } else {
       alert('Please select images to upload.');
     }
   };
 
-  // Drag and drop functionality
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragging(false);
-    const files = e.dataTransfer.files;
-    setSelectedFiles(files);
-    const previews = Array.from(files).map((file) =>
-      URL.createObjectURL(file)
+  const toggleImageSelection = (imageUrl) => {
+    setSelectedImages((prev) =>
+      prev.includes(imageUrl) ? prev.filter((img) => img !== imageUrl) : [...prev, imageUrl]
     );
-    setImagePreviews(previews);
+  };
+
+  const handleBulkDownload = async () => {
+    if (selectedImages.length === 0) return;
+    setDownloading(true);
+    const zip = new JSZip();
+    const folder = zip.folder("gallery_images");
+
+    try {
+      const downloadPromises = selectedImages.map(async (url, index) => {
+        const response = await fetch(url, { mode: 'cors' });
+        const blob = await response.blob();
+        const fileName = url.split('/').pop() || `image_${index + 1}.jpg`;
+        folder.file(fileName, blob);
+      });
+
+      await Promise.all(downloadPromises);
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, "crm_gallery_bulk_download.zip");
+      setSelectedImages([]); // Clear selection after download
+    } catch (error) {
+      console.error("Error during bulk download:", error);
+      alert("Error downloading images. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    const allImages = galleries.flatMap(g => g.images.map(img => `${APP_URL}/uploads/${img}`));
+    if (selectedImages.length === allImages.length) {
+      setSelectedImages([]);
+    } else {
+      setSelectedImages(allImages);
+    }
   };
 
   return (
-    <div>
-      {/* Upload Gallery Button */}
-      <CButton color="primary" onClick={() => setModalVisible(true)} className="mb-4">
-        Upload Gallery
-      </CButton>
+    <div className="gallery-container fade-in">
+      <div className="d-flex justify-content-between align-items-center mb-4 sticky-top bg-light py-3 px-2 rounded shadow-sm">
+        <div>
+          <h4 className="fw-bold m-0 text-primary">Media Gallery</h4>
+          <p className="text-muted small m-0">{galleries.length} folders loaded</p>
+        </div>
+        <div className="d-flex gap-2">
+          <CButton color="info" variant="outline" onClick={handleSelectAll}>
+            {selectedImages.length === galleries.flatMap(g => g.images).length ? 'Deselect All' : 'Select All'}
+          </CButton>
+          <CButton color="primary" onClick={() => setModalVisible(true)} className="d-flex align-items-center gap-2">
+            <CIcon icon={cilCloudUpload} /> Upload Gallery
+          </CButton>
+          {selectedImages.length > 0 && (
+            <CButton color="success" onClick={handleBulkDownload} disabled={downloading} className="d-flex align-items-center gap-2 text-white">
+              {downloading ? <CSpinner size="sm" /> : <CIcon icon={cilCloudDownload} />}
+              Download ({selectedImages.length})
+            </CButton>
+          )}
+        </div>
+      </div>
 
-      {/* Error Handling */}
-      {error && <div className="error-message">{error}</div>}
-
-      {/* Gallery Images */}
-      <CRow className={className} xs={{ gutter: 4 }}>
+      <CRow xs={{ gutter: 4 }}>
         {loading ? (
-          <div>Loading galleries...</div>
-        ) : error ? (
-          <div className="error-message">{error}</div>
+          <div className="text-center py-5 w-100">
+            <CSpinner color="primary" />
+            <p className="mt-2 text-muted">Loading your media...</p>
+          </div>
         ) : (
           galleries.map((gallery) => (
-            gallery.images.map((image, index) => (
-              <CCol sm={6} xl={3} key={gallery._id + '-' + index}>
-                <CCard className="mb-4 position-relative">
-                  <CCardImage
-                    orientation="top"
-                    src={`${APP_URL}/uploads/${image}`} // Full image URL
-                    alt={`Image ${index + 1}`}
-                  />
-                   
-                    {/* Dropdown at the top-right corner */}
-                    <div className="d-flex justify-content-end position-absolute top-0 end-0 m-2">
-                      <CDropdown>
-                        <CDropdownToggle color="transparent" caret={false} className="text-black p-0">
+            gallery.images.map((image, index) => {
+              const fullUrl = `${APP_URL}/uploads/${image}`;
+              const isSelected = selectedImages.includes(fullUrl);
+              return (
+                <CCol sm={6} md={4} xl={3} key={gallery._id + '-' + index}>
+                  <CCard className={`h-100 shadow-sm border-0 gallery-card ${isSelected ? 'selected' : ''}`} onClick={() => toggleImageSelection(fullUrl)}>
+                    <div className="position-relative overflow-hidden rounded-top">
+                      <CCardImage
+                        orientation="top"
+                        src={fullUrl}
+                        alt={`Image ${index + 1}`}
+                        className="gallery-img"
+                        style={{ height: '200px', objectFit: 'cover' }}
+                      />
+                      <div className="selection-overlay">
+                         <CIcon icon={cilCheckCircle} size="xl" className={isSelected ? 'text-success' : 'text-white opacity-50'} />
+                      </div>
+                    </div>
+                    <CCardBody className="p-2 d-flex justify-content-between align-items-center">
+                       <span className="text-truncate small text-muted" style={{ maxWidth: '150px' }}>{image}</span>
+                       <CDropdown onClick={(e) => e.stopPropagation()}>
+                        <CDropdownToggle color="transparent" caret={false} className="p-0 border-0">
                           <CIcon icon={cilOptions} />
                         </CDropdownToggle>
                         <CDropdownMenu>
-                          <CDropdownItem onClick={() => handleCopyImageLink(`${APP_URL}/uploads/${image}`)}>
-                            Copy Image Link
+                          <CDropdownItem onClick={() => handleCopyImageLink(fullUrl)}>
+                            Copy Link
+                          </CDropdownItem>
+                          <CDropdownItem onClick={() => window.open(fullUrl, '_blank')}>
+                            Open in New Tab
                           </CDropdownItem>
                         </CDropdownMenu>
                       </CDropdown>
-                    </div>
-                   
-                </CCard>
-              </CCol>
-            ))
+                    </CCardBody>
+                  </CCard>
+                </CCol>
+              );
+            })
           ))
         )}
       </CRow>
 
-      {/* Modal for Uploading Images */}
-      <CModal visible={modalVisible} onClose={() => setModalVisible(false)} size="lg">
+      <CModal visible={modalVisible} onClose={() => setModalVisible(false)} size="lg" backdrop="static">
         <CModalHeader closeButton>
-          <CModalTitle>Upload Images</CModalTitle>
+          <CModalTitle>Add Media to Gallery</CModalTitle>
         </CModalHeader>
         <CModalBody>
           <CForm>
             <div
-              className={`file-upload-area ${dragging ? 'dragging' : ''}`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+              className={`file-upload-area ${dragging ? 'dragging' : ''} p-5 border-dashed rounded text-center`}
+              onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragging(false);
+                const files = e.dataTransfer.files;
+                setSelectedFiles(files);
+                setImagePreviews(Array.from(files).map(f => URL.createObjectURL(f)));
+              }}
             >
-              <CFormInput
-                type="file"
-                multiple
-                onChange={handleFileChange}
-                label="Select Images or Drag and Drop"
-                id="image-upload"
-                className="file-input"
-              />
+              <CFormInput type="file" multiple onChange={handleFileChange} className="mb-3" />
+              <p className="text-muted">Drag images here or click to select</p>
               {imagePreviews.length > 0 && (
-                <div className="image-previews">
-                  {imagePreviews.map((preview, index) => (
-                    <img
-                      key={index}
-                      src={preview}
-                      alt={`Preview ${index + 1}`}
-                      className="preview-image"
-                    />
+                <div className="d-flex flex-wrap gap-2 mt-3 justify-content-center">
+                  {imagePreviews.map((preview, idx) => (
+                    <CAvatar src={preview} size="xl" key={idx} shape="rounded-3" className="shadow-sm" />
                   ))}
                 </div>
               )}
@@ -196,14 +232,25 @@ const Gallery = ({ className }) => {
           </CForm>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={() => setModalVisible(false)}>
-            Cancel
-          </CButton>
-          <CButton color="primary" onClick={handleUpload}>
-            Upload
-          </CButton>
+          <CButton color="secondary" onClick={() => setModalVisible(false)}>Cancel</CButton>
+          <CButton color="primary" onClick={handleUpload} disabled={!selectedFiles}>Start Upload</CButton>
         </CModalFooter>
       </CModal>
+
+      <style>{`
+        .gallery-card { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .gallery-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+        .gallery-card.selected { border: 2px solid #2eb85c !important; }
+        .selection-overlay {
+          position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.2);
+          display: flex; align-items: center; justify-content: center;
+          opacity: 0; transition: opacity 0.2s;
+        }
+        .gallery-card:hover .selection-overlay, .gallery-card.selected .selection-overlay { opacity: 1; }
+        .border-dashed { border: 2px dashed #dee2e6; }
+        .file-upload-area.dragging { background: #f8f9fa; border-color: #3c4b64; }
+      `}</style>
     </div>
   );
 };

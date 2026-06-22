@@ -49,11 +49,14 @@ const UserLogout = () => {
 }
   return (
     <CDropdown variant="nav-item">
-      <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
-        <CAvatar size="md" style={{borderRadius: '50%', backgroundColor: '#5856d6', color: '#fff'}}>
-        {userDetails.name ? userDetails.name.split(' ').map((name) => name.charAt(0).toUpperCase()).join('') : ''}
+      <CDropdownToggle placement="bottom-end" className="py-0 pe-0 d-flex align-items-center" caret={false} style={{ border: 'none', background: 'transparent' }}>
+        <div className="d-none d-md-block me-2 text-end">
+          <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b', lineHeight: 1 }}>{userDetails.name || 'User'}</div>
+          <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px', textTransform: 'capitalize' }}>{userDetails.role || 'Member'}</div>
+        </div>
+        <CAvatar size="md" style={{ borderRadius: '10px', backgroundColor: '#4f46e5', color: '#fff', fontWeight: 700 }}>
+          {userDetails.name ? userDetails.name.split(' ').map((name) => name.charAt(0).toUpperCase()).slice(0, 2).join('') : 'U'}
         </CAvatar>
-         
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
         <CDropdownHeader className="bg-body-secondary fw-semibold my-2">Settings</CDropdownHeader>
