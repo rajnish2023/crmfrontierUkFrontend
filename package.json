@@ -26,7 +26,7 @@
     "@coreui/react": "^5.4.1",
     "@coreui/react-chartjs": "^3.0.0",
     "@coreui/utils": "^2.0.2",
-    "@measured/puck": "^0.20.2",
+    "@measured/puck": "^0.13.0",
     "@popperjs/core": "^2.11.8",
     "axios": "^1.7.9",
     "chart.js": "^4.4.6",

@@ -1,7 +1,7 @@
 import axios from 'axios';
-// const API = axios.create({ baseURL: 'https://crmfoceplus-backend.onrender.com/api' });
+const API = axios.create({ baseURL: 'https://crmfrontierukbackend.onrender.com/api' });
 
-const API = axios.create({ baseURL: 'http://localhost:7878/api' });
+// const API = axios.create({ baseURL: 'http://localhost:7878/api' });
 
 // Global Response Interceptor for security and better error handling
 API.interceptors.response.use(
