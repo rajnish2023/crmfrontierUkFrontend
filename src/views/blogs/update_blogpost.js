@@ -24,7 +24,7 @@ import 'react-toastify/dist/ReactToastify.css';
 const EditBlogPost = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const APP_URL = 'https://crmfoceplus-backend.onrender.com';
+  const APP_URL = 'https://crmfrontierukbackend.onrender.com';
 
   const [post, setPost] = useState({
     title: '',

@@ -39,7 +39,7 @@ const Gallery = ({ className }) => {
   const [error, setError] = useState(null);
   const [selectedImages, setSelectedImages] = useState([]);
   const [downloading, setDownloading] = useState(false);
-  const APP_URL = 'https://crmfoceplus-backend.onrender.com';
+  const APP_URL = 'https://crmfrontierukbackend.onrender.com';
 
   useEffect(() => {
     const loadGalleries = async () => {

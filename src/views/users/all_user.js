@@ -64,7 +64,7 @@ const User = () => {
 
   const [profilePic, setProfilePic] = useState(null);
 
-  const APP_URL = 'https://crmfoceplus-backend.onrender.com';
+  const APP_URL = 'https://crmfrontierukbackend.onrender.com';
 
   const loadUsers = async () => {
     try {

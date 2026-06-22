@@ -53,7 +53,7 @@ const BlogCategory = () => {
   // State for editing category
   const [editCategory, setEditCategory] = useState(null);
 
-  const APP_URL = 'https://crmfoceplus-backend.onrender.com';
+  const APP_URL = 'https://crmfrontierukbackend.onrender.com';
 
   const loadCategories = async () => {
     try {
