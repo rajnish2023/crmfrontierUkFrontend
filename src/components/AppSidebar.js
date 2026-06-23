@@ -11,7 +11,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { AppSidebarNav } from './AppSidebarNav'
-import logo from './../../public/crmforceplus-logo.webp'
+import logo from './../../public/crmfrontier.svg'
 import navigation from '../_nav'
 import { getUserProfile } from '../api/api';
 

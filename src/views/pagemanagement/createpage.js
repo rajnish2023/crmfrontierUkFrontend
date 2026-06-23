@@ -74,23 +74,34 @@ const CreatePage = () => {
         content: finalData, 
         status: status,
         // SEO Data
-        metaTitle,
-        metaDescription,
-        metaKeywords,
-        metaImage,
-        seoTitle,
-        seoDescription,
-        canonicalUrl,
-        robotsMeta,
-        ogTitle,
-        ogDescription,
-        ogImage,
-        ogType,
-        twitterCard,
-        twitterTitle,
-        twitterDescription,
-        twitterImage,
-        jsonLd
+         seo: {
+    metaTitle,
+    metaDescription,
+    metaKeywords,
+    metaImage,
+
+    seoTitle,
+    seoDescription,
+
+    canonicalUrl,
+    robotsMeta,
+
+    openGraph: {
+      title: ogTitle,
+      description: ogDescription,
+      image: ogImage,
+      type: ogType
+    },
+
+    twitter: {
+      card: twitterCard,
+      title: twitterTitle,
+      description: twitterDescription,
+      image: twitterImage
+    },
+
+    jsonLd
+  }
       })
       toast.success(`🎉 Page ${status === 'Draft' ? 'saved as draft' : 'published'} successfully!`)
       navigate('/all-pages')
@@ -596,35 +607,7 @@ const CreatePage = () => {
               overflowY: 'auto',
               flex: 1
             }}>
-              {/* ─── SEO PREVIEW ── */}
-              <div style={{ 
-                background: '#f8fafc', 
-                borderRadius: '12px', 
-                padding: '20px',
-                marginBottom: '32px',
-                border: '1px solid #e2e8f0'
-              }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>
-                  📋 Search Preview
-                </div>
-                <div style={{ 
-                  background: '#ffffff', 
-                  padding: '16px', 
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <div style={{ fontSize: '1.1rem', color: '#1a0dab', fontWeight: 400, marginBottom: '4px' }}>
-                    {seoTitle || metaTitle || title || 'Your Page Title'}
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#006621', marginBottom: '4px' }}>
-                    https://yoursite.com/{slug || 'new-page'}
-                  </div>
-                  <div style={{ fontSize: '0.85rem', color: '#545454' }}>
-                    {seoDescription || metaDescription || 'Your page description will appear here.'}
-                  </div>
-                </div>
-              </div>
-
+              
               {/* ─── BASIC SEO ── */}
               <div style={{ marginBottom: '32px' }}>
                 <h4 style={{ 
@@ -1226,6 +1209,36 @@ const CreatePage = () => {
                     💡 Tip: Use <a href="https://schema.org" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'none' }}>schema.org</a> for valid JSON-LD
                   </div>
                 </div>
+
+                {/* ─── SEO PREVIEW ── */}
+              <div style={{ 
+                background: '#f8fafc', 
+                borderRadius: '12px', 
+                padding: '20px',
+                marginBottom: '32px',
+                border: '1px solid #e2e8f0'
+              }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', marginBottom: '12px' }}>
+                  📋 Search Preview
+                </div>
+                <div style={{ 
+                  background: '#ffffff', 
+                  padding: '16px', 
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <div style={{ fontSize: '1.1rem', color: '#1a0dab', fontWeight: 400, marginBottom: '4px' }}>
+                    {seoTitle || metaTitle || title || 'Your Page Title'}
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#006621', marginBottom: '4px' }}>
+                    https://yoursite.com/{slug || 'new-page'}
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: '#545454' }}>
+                    {seoDescription || metaDescription || 'Your page description will appear here.'}
+                  </div>
+                </div>
+              </div>
+
               </div>
             </div>
             
