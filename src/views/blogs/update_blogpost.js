@@ -286,7 +286,7 @@ const removeTag = (indexToRemove) => {
               </CCardHeader>
               <CCardBody className="pt-0">
                 <div className="upload-zone p-4 border rounded text-center bg-light">
-                  <CFormInput type="file" name="banner" onChange={handleFileChange} className="d-none" id="banner-edit-upload" />
+                  <CFormInput type="file" name="banner" accept="image/*" onChange={handleFileChange} className="d-none" id="banner-edit-upload" />
                   <label htmlFor="banner-edit-upload" className="cursor-pointer d-block">
                     {bannerPreview ? (
                       <img src={bannerPreview} alt="Banner" className="img-fluid rounded shadow-sm mb-3" style={{ maxHeight: '300px' }} />
@@ -294,7 +294,7 @@ const removeTag = (indexToRemove) => {
                       <div className="py-4 text-muted">Click to change banner image</div>
                     )}
                   </label>
-                  <CButton color="primary" variant="ghost" size="sm" onClick={() => document.getElementById('banner-edit-upload').click()}>
+                  <CButton type="button" color="primary" variant="ghost" size="sm" onClick={() => document.getElementById('banner-edit-upload').click()}>
                     Change Banner
                   </CButton>
                 </div>
