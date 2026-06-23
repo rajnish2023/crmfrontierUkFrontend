@@ -31,14 +31,18 @@ const CreateBlogPost = () => {
     metaDescription: '',
     metakeywords: '',
     status: 'Draft',
-    schema: [' ']
+    schema: [' '],
+    tags: []
   });
 
   const [categories, setCategories] = useState([]);
   const [errors, setErrors] = useState({});
+  const [backendErrors, setBackendErrors] = useState({});
   const [bannerPreview, setBannerPreview] = useState(null);
   const [metaImagePreview, setMetaImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [tagInput, setTagInput] = useState('');
+  const [isSlugManual, setIsSlugManual] = useState(false);
 
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
@@ -59,12 +63,19 @@ const CreateBlogPost = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewPost((prevPost) => ({ ...prevPost, [name]: value }));
+    setNewPost((prevPost) => {
+      const nextPost = { ...prevPost, [name]: value };
+
+      if (name === 'title' && !isSlugManual) {
+        nextPost.slug = value.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+      }
+
+      return nextPost;
+    });
     setErrors((prevErrors) => ({ ...prevErrors, [name]: '' }));
 
-    if (name === 'title' && !newPost.slug) {
-      const autoSlug = value.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-      setNewPost(prev => ({ ...prev, slug: autoSlug }));
+    if (name === 'slug') {
+      setIsSlugManual(true);
     }
   };
 
@@ -85,6 +96,23 @@ const CreateBlogPost = () => {
     setErrors(prev => ({ ...prev, content: '' }));
   };
 
+  const handleSchemaChange = (index, value) => {
+    const updated = [...newPost.schema];
+    updated[index] = value;
+    setNewPost((prev) => ({ ...prev, schema: updated }));
+  };
+
+  const addSchema = () => {
+    setNewPost((prev) => ({ ...prev, schema: [...prev.schema, ''] }));
+  };
+
+  const removeSchema = (index) => {
+    setNewPost((prev) => {
+      const updatedSchema = prev.schema.filter((_, idx) => idx !== index);
+      return { ...prev, schema: updatedSchema };
+    });
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!newPost.title) newErrors.title = 'Title is required';
@@ -92,6 +120,7 @@ const CreateBlogPost = () => {
     if (!newPost.category) newErrors.category = 'Category is required';
     if (!newPost.content) newErrors.content = 'Content is required';
     if (!newPost.excerpt) newErrors.excerpt = 'Excerpt is required';
+    if (!newPost.tags || newPost.tags.length === 0) newErrors.tags = 'At least one tag required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -108,6 +137,7 @@ const CreateBlogPost = () => {
     const formData = new FormData();
     Object.keys(newPost).forEach(key => {
       if (key === 'schema') formData.append(key, JSON.stringify(newPost.schema));
+      else if (key === 'tags') formData.append(key, JSON.stringify(newPost.tags));
       else formData.append(key, newPost[key]);
     });
 
@@ -125,6 +155,40 @@ const CreateBlogPost = () => {
       setLoading(false);
     }
   };
+
+const handleTagKeyDown = (e) => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+
+    const value = tagInput.trim();
+
+    if (!value) return;
+
+    // Prevent duplicate tags
+    if (newPost.tags.includes(value.toLowerCase())) {
+      setTagInput('');
+      return;
+    }
+
+    setNewPost((prev) => ({
+      ...prev,
+      tags: [...prev.tags, value.toLowerCase()]
+    }));
+
+    setErrors((prev) => ({ ...prev, tags: '' }));
+    setTagInput('');
+  }
+};
+
+const removeTag = (indexToRemove) => {
+  setNewPost((prev) => ({
+    ...prev,
+    tags: prev.tags.filter((_, index) => index !== indexToRemove)
+  }));
+};
+
+
+
 
   return (
     <div className="fade-in">
@@ -302,6 +366,77 @@ const CreateBlogPost = () => {
                     <img src={metaImagePreview} alt="Meta Preview" className="img-fluid rounded mt-2 shadow-sm" style={{ maxHeight: '100px' }} />
                   )}
                 </div>
+
+                 {/* Tags Field */}
+              <CFormLabel className="form-label mt-3">
+              Tags
+              </CFormLabel>
+
+              <div className="custom-tags-input">
+
+              {/* Tags List */}
+              <div className="tags-wrapper">
+              {newPost.tags.map((tag, index) => (
+                <div key={index} className="tag-item">
+                  <span>{tag}</span>
+
+                  <button
+                    type="button"
+                    className="remove-tag-btn"
+                    onClick={() => removeTag(index)}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+
+              {/* Input */}
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={handleTagKeyDown}
+                placeholder="Type tag and press enter"
+                className="tag-input-field"
+              />
+              </div>
+              {errors.tags && <p className="text-danger small mt-1">{errors.tags}</p>}
+              </div>
+
+              <CFormText className="text-muted">
+              Press Enter or comma to add tags
+              </CFormText>
+              {/* Schema Fields */}
+               <CFormLabel className="form-label mt-3">Structured Data (Schema)</CFormLabel>
+               {newPost.schema.map((schemaText, idx) => (
+                  <div key={idx} className="mb-3">
+                    <CFormTextarea
+                      rows={3}
+                      value={schemaText}
+                      onChange={(e) => handleSchemaChange(idx, e.target.value)}
+                      placeholder="Enter JSON-LD or structured data"
+                    />
+                    {newPost.schema.length > 1 && (
+                      <CButton
+                        color="danger"
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => removeSchema(idx)}
+                      >
+                        Remove
+                      </CButton>
+                    )}
+                  </div>
+                ))}
+                <CButton
+                  color="success"
+                  size="sm"
+                  variant="outline"
+                  onClick={addSchema}
+                >
+                  Add Schema
+                </CButton>
               </CCardBody>
             </CCard>
           </CCol>

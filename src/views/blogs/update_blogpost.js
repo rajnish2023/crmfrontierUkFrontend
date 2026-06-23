@@ -36,7 +36,8 @@ const EditBlogPost = () => {
     metaDescription: '',
     metakeywords: '',
     status: 'Draft',
-    schema: [' ']
+    schema: [' '],
+    tags:[]
   });
 
   const [categories, setCategories] = useState([]);
@@ -45,6 +46,7 @@ const EditBlogPost = () => {
   const [metaImagePreview, setMetaImagePreview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [tagInput, setTagInput] = useState('');
 
   const token = localStorage.getItem('token');
 
@@ -60,6 +62,7 @@ const EditBlogPost = () => {
 
         const postData = postRes.data;
         if (!Array.isArray(postData.schema)) postData.schema = [''];
+        if (!Array.isArray(postData.tags)) postData.tags = [];
 
         setPost(postData);
         if (postData.banner) setBannerPreview(postData.banner.startsWith('http') ? postData.banner : `${APP_URL}/uploads/${postData.banner}`);
@@ -95,6 +98,19 @@ const EditBlogPost = () => {
     }
   };
 
+  const handleSchemaChange = (index, value) => {
+    const updatedSchema = [...post.schema];
+    updatedSchema[index] = value;
+    setPost((prevPost) => ({ ...prevPost, schema: updatedSchema }));
+  };
+  const addSchema = () => {
+    setPost((prevPost) => ({ ...prevPost, schema: [...prevPost.schema, ''] }));
+  }
+  const removeSchema = (index) => {
+    const updatedSchema = post.schema.filter((_, idx) => idx !== index);
+    setPost((prevPost) => ({ ...prevPost, schema: updatedSchema }));
+  }
+
   const handleEditorChange = (content) => {
     setPost((prev) => ({ ...prev, content }));
     setErrors(prev => ({ ...prev, content: '' }));
@@ -123,13 +139,14 @@ const EditBlogPost = () => {
     const formData = new FormData();
     Object.keys(post).forEach(key => {
       if (key === 'schema') formData.append(key, JSON.stringify(post.schema));
+      else if (key === 'tags') formData.append(key, JSON.stringify(post.tags));
       else if (key === 'category') formData.append(key, post.category._id || post.category);
       else if (post[key] !== null) formData.append(key, post[key]);
     });
 
     try {
       await updateBlogPost(token, id, formData);
-      toast.success('🎉 Blog post updated successfully!');
+      toast.success('Blog post updated successfully!');
       setTimeout(() => navigate('/all-blogs'), 1000);
     } catch (error) {
       const msg = error.response?.data?.message || error.response?.data?.error || 'Failed to update post';
@@ -141,6 +158,35 @@ const EditBlogPost = () => {
       setSaving(false);
     }
   };
+
+ const handleTagKeyDown = (e) => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+
+    const value = tagInput.trim().toLowerCase();
+    const currentTags = Array.isArray(post.tags) ? post.tags : [];
+
+    if (!value) return;
+    if (currentTags.includes(value)) {
+      setTagInput('');
+      return;
+    }
+
+    setPost((prev) => ({
+      ...prev,
+      tags: [...currentTags, value]
+    }));
+
+    setTagInput('');
+  }
+};
+
+const removeTag = (indexToRemove) => {
+  setPost((prev) => ({
+    ...prev,
+    tags: (Array.isArray(prev.tags) ? prev.tags : []).filter((_, index) => index !== indexToRemove)
+  }));
+};
 
   if (loading) {
     return (
@@ -312,6 +358,78 @@ const EditBlogPost = () => {
                     <img src={metaImagePreview} alt="Meta Preview" className="img-fluid rounded mt-2 shadow-sm" style={{ maxHeight: '120px' }} />
                   )}
                 </div>
+                {/* Tags Field */}
+              <CFormLabel className="form-label mt-3">
+              Tags
+              </CFormLabel>
+
+              <div className="custom-tags-input">
+
+              <div className="tags-wrapper">
+
+              {/* Existing Tags */}
+              {post.tags?.map((tag, index) => (
+              <div key={index} className="tag-item">
+              <span>{tag}</span>
+
+              <button
+              type="button"
+              className="remove-tag-btn"
+              onClick={() => removeTag(index)}
+              >
+              ×
+              </button>
+              </div>
+              ))}
+
+              {/* Input */}
+              <input
+              type="text"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagKeyDown}
+              placeholder="Type tag and press enter"
+              className="tag-input-field"
+              />
+              </div>
+              </div>
+
+              <CFormText className="text-muted">
+              Press Enter or comma to add tags
+              </CFormText>
+
+                 {/* Structured Data (Schema) */}
+              <CFormLabel className="form-label mt-3 mb-3">Structured Data (Schema)</CFormLabel>
+                {post.schema.map((schemaText, idx) => (
+                 <div key={idx} className="mb-3">
+                  <CFormTextarea
+                      rows={3}
+                      value={schemaText}
+                      onChange={(e) => handleSchemaChange(idx, e.target.value)}
+                      placeholder="Enter JSON-LD or structured data"
+                    />
+                  {post.schema.length > 1 && (
+                      <CButton
+                        color="danger"
+                        size="sm"
+                        variant="outline"
+                        className="mt-2"
+                        onClick={() => removeSchema(idx)}
+                      >
+                        Remove
+                      </CButton>
+                    )}
+                    </div>
+                    ))}
+                <CButton
+                    color="success"
+                    size="sm"
+                    variant="outline"
+                    onClick={addSchema}
+                    className="mb-3"
+                    >
+                    Add Schema
+                </CButton>
               </CCardBody>
             </CCard>
           </CCol>

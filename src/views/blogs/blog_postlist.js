@@ -91,7 +91,7 @@ const BlogPostList = () => {
                 <Link to={`/blog-post/update/${post._id}`} style={{ color: 'white' }}>Edit</Link>
                 </CButton>
                 <CButton className="mx-3" color="warning">
-                <Link to ={`https://www.crmfrontier.com/blog/preview/${post.slug}`} target='_blank'>Preview</Link>
+                <Link to ={`https://www.crmfrontier.co.uk/blog/preview/${post.slug}`} target='_blank'>Preview</Link>
                 </CButton>
                   {/* <CButton color="danger" onClick={() => handleDeletePost(post._id)}>Delete</CButton> */}
                 </CTableDataCell>
